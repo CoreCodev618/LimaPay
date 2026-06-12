@@ -1,0 +1,12 @@
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+
+# Entornos virtuales y variables de entorno
+venv/
+env/
+.env
+
+# Archivos de Flet / Sistema operativo
+.DS_Store
+Thumbs.db
