@@ -8,9 +8,7 @@ def main(page: ft.Page):
     page.window.resizable = False
     page.title = 'LimaPay - Login'
     
-    #Alineacion de los elementos
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.padding = 0
 
     login = vista_login()
     page.add(login)
