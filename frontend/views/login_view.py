@@ -1,55 +1,138 @@
+import asyncio
 import flet as ft
 
-def iniciar_sesion(dni: str, password: str) -> dict:
-    # Simulamos el retorno de éxito definido en el documento
+from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+
+
+# --- Mock temporal del backend (reemplazar por: from backend.dao_pasajeros import iniciar_sesion) ---
+async def iniciar_sesion(dni: str, clave: str) -> dict:
+    await asyncio.sleep(1)
+    if len(dni) != 8 or not dni.isdigit():
+        return {"status": False, "mensaje": "El DNI debe tener 8 dígitos"}
     return {"status": True, "pasajero_id": 1, "billetera_id": 100, "nombre": "Sebastian"}
 
-def vista_login():
-    # 1. Paleta de colores
-    color_primario = "#0056D2"
-    color_tarjeta = "#C3E6FF"
-    fuente_titulo = "https://fonts.gstatic.com/s/opensans/v40/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSKmu1aB.woff2"
-    
-    titulo = ft.Text("LimaPay", size=40, weight="bold", color=color_primario, font_family= fuente_titulo)
-    subtitulo = ft.Text("Tu billetera de movilidad", size=14, color=ft.Colors.GREY_700)
-    
-    txt_dni = ft.TextField(label="DNI", width=280, max_length=8, border_radius=10, prefix_icon=ft.Icons.BADGE, color=ft.Colors.BLACK_87, bgcolor=ft.Colors.WHITE)
-    txt_clave = ft.TextField(label="Contraseña", width=280, password=True, can_reveal_password=True, border_radius=10, prefix_icon=ft.Icons.LOCK, color=ft.Colors.BLACK_87, bgcolor=ft.Colors.WHITE)
 
-    
-    def autenticar_login(e):
-        dni_ingresado = txt_dni.value
-        pass_ingresado = txt_clave.value
-        resultado = iniciar_sesion(dni = dni_ingresado, password = pass_ingresado)
-        
-        if resultado['status']:
-            print("exito")
-        else:
-            print("fallo")
-    
-    btn_ingresar = ft.Button(
-        content=ft.Text("Ingresar"), 
-        width=280,
-        height=50,
-        bgcolor=color_primario,
-        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-        on_click=autenticar_login
-        )
-    
-    tarjeta_login= ft.Container(
-        content = ft.Column(
-        controls = [titulo, subtitulo, ft.Divider(height=15, color="transparent"),txt_dni,txt_clave,btn_ingresar],
-        alignment=ft.MainAxisAlignment.CENTER,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=10
-    ),
-        bgcolor=color_tarjeta,
-        padding=40,
-        shadow=ft.BoxShadow(spread_radius=1, blur_radius=20, color= ft.Colors.BLUE_GREY)
+def calcular_ancho_tarjeta(ancho_pagina: float | None) -> int:
+    """Tarjeta de 380px en pantallas grandes, se achica en pantallas angostas (mínimo 280px)."""
+    if not ancho_pagina:
+        return 380
+    return int(max(280, min(ancho_pagina - 48, 380)))
+
+
+def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None) -> ft.Container:
+    paleta = obtener_paleta(modo_oscuro)
+
+    # ---------- Campos de entrada ----------
+    campo_dni = ft.TextField(
+        label="DNI",
+        max_length=8,
+        keyboard_type=ft.KeyboardType.NUMBER,
+        prefix_icon=ft.Icons.BADGE_OUTLINED,
+        filled=True,
+        border_radius=12,
+        border_color="transparent",
+        focused_border_color=COLOR_PRIMARIO,
+        bgcolor=paleta["campo"],
+        color=paleta["texto_principal"],
     )
-    
-    return ft.Container(
-        content=tarjeta_login,
+
+    campo_clave = ft.TextField(
+        label="Contraseña",
+        password=True,
+        can_reveal_password=True,
+        prefix_icon=ft.Icons.LOCK_OUTLINE,
+        filled=True,
+        border_radius=12,
+        border_color="transparent",
+        focused_border_color=COLOR_PRIMARIO,
+        bgcolor=paleta["campo"],
+        color=paleta["texto_principal"],
+    )
+
+    texto_error = ft.Text(color=COLOR_ERROR, size=13, visible=False)
+
+    # ---------- Botón de ingreso ----------
+    texto_boton_login = ft.Text("Iniciar sesión", color="#0A0E1A", weight=ft.FontWeight.BOLD)
+
+    boton_login = ft.Container(
+        content=texto_boton_login,
+        gradient=ft.LinearGradient(colors=[COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO]),
+        border_radius=12,
+        padding=15,
         alignment=ft.Alignment.CENTER,
-        expand= True,
+        ink=True,
+    )
+
+    async def manejar_login(e):
+        texto_error.visible = False
+
+        dni = campo_dni.value or ""
+        if len(dni) != 8 or not dni.isdigit():
+            texto_error.value = "El DNI debe tener 8 dígitos"
+            texto_error.visible = True
+            pagina.update()
+            return
+
+        boton_login.content = ft.ProgressRing(width=18, height=18, color="#0A0E1A", stroke_width=2)
+        pagina.update()
+
+        resultado = await iniciar_sesion(dni, campo_clave.value or "")
+
+        boton_login.content = texto_boton_login
+
+        if resultado["status"] and al_iniciar_sesion:
+            al_iniciar_sesion(resultado)
+        else:
+            texto_error.value = resultado.get("mensaje", "No se pudo iniciar sesión")
+            texto_error.visible = True
+        pagina.update()
+
+    boton_login.on_click = manejar_login
+
+    # ---------- Logo + nombre de la app ----------
+    logo = ft.Image(src="logo.png", width=80, height=80, border_radius=18)
+    texto_nombre_app = ft.Text("LimaPay", size=28, weight=ft.FontWeight.BOLD, color=paleta["texto_principal"])
+
+    # ---------- Tarjeta ----------
+    tarjeta = ft.Container(
+        width=calcular_ancho_tarjeta(pagina.width),
+        padding=28,
+        border_radius=24,
+        bgcolor=paleta["tarjeta"],
+        content=ft.Column(
+            spacing=16,
+            controls=[
+                ft.Text("Bienvenido de vuelta", size=20, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
+                ft.Text("Inicia sesión para continuar", size=13, color=paleta["texto_secundario"]),
+                campo_dni,
+                campo_clave,
+                texto_error,
+                boton_login,
+            ],
+        ),
+    )
+
+    # ---------- Responsive: la tarjeta se ajusta al ancho de la ventana ----------
+    def al_redimensionar(e):
+        tarjeta.width = calcular_ancho_tarjeta(pagina.width)
+        pagina.update()
+
+    pagina.on_resized = al_redimensionar
+
+    # ---------- Fondo ----------
+    return ft.Container(
+        expand=True,
+        alignment=ft.Alignment.CENTER,
+        padding=20,
+        gradient=ft.LinearGradient(
+            begin=ft.Alignment.TOP_CENTER,
+            end=ft.Alignment.BOTTOM_CENTER,
+            colors=[paleta["fondo_inicio"], paleta["fondo_fin"]],
+        ),
+        content=ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=24,
+            controls=[logo, texto_nombre_app, tarjeta],
+        ),
     )
