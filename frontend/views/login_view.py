@@ -13,13 +13,12 @@ async def iniciar_sesion(dni: str, clave: str) -> dict:
 
 
 def calcular_ancho_tarjeta(ancho_pagina: float | None) -> int:
-    """Tarjeta de 380px en pantallas grandes, se achica en pantallas angostas (mínimo 280px)."""
     if not ancho_pagina:
         return 380
     return int(max(280, min(ancho_pagina - 48, 380)))
 
 
-def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None) -> ft.Container:
+def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None, al_ir_registro = None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
 
     # ---------- Campos de entrada ----------
@@ -62,6 +61,28 @@ def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None) -> f
         alignment=ft.Alignment.CENTER,
         ink=True,
     )
+    
+    boton_ir_registro = ft.TextButton(
+        "¿No tienes cuenta? Regístrate", 
+        style=ft.ButtonStyle(color=paleta["texto_secundario"]),
+        on_click=lambda e: al_ir_registro() if al_ir_registro else None
+    )
+    
+    tarjeta = ft.Container(
+        # ...
+        content=ft.Column(
+            spacing=16,
+            controls=[
+                ft.Text("Bienvenido de vuelta", size=20, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
+                ft.Text("Inicia sesión para continuar", size=13, color=paleta["texto_secundario"]),
+                campo_dni,
+                campo_clave,
+                texto_error,
+                boton_login,
+                boton_ir_registro # <--- Botón añadido aquí
+            ],
+        ),
+    )
 
     async def manejar_login(e):
         texto_error.visible = False
@@ -85,7 +106,7 @@ def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None) -> f
         else:
             texto_error.value = resultado.get("mensaje", "No se pudo iniciar sesión")
             texto_error.visible = True
-        pagina.update()
+        pagina.update()  
 
     boton_login.on_click = manejar_login
 
@@ -108,6 +129,7 @@ def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None) -> f
                 campo_clave,
                 texto_error,
                 boton_login,
+                boton_ir_registro,
             ],
         ),
     )
