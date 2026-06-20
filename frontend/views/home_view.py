@@ -26,7 +26,7 @@ def calcular_ancho_contenido(ancho_pagina: float | None) -> int:
     return int(max(300, min(ancho_pagina - 40, 420)))
 
 
-def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerrar_sesion=None) -> ft.Container:
+def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerrar_sesion=None, al_ir_scanner=None, al_ir_recarga=None, al_ir_historial=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
     billetera_id = datos_pasajero.get("billetera_id")
     nombre = datos_pasajero.get("nombre", "")
@@ -98,9 +98,9 @@ def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerr
         run_spacing=12,
         alignment=ft.MainAxisAlignment.CENTER,
         controls=[
-            crear_acceso_rapido(ft.Icons.QR_CODE_SCANNER, "Escanear"),
-            crear_acceso_rapido(ft.Icons.ADD_CARD, "Recargar"),
-            crear_acceso_rapido(ft.Icons.HISTORY, "Historial"),
+            crear_acceso_rapido(ft.Icons.QR_CODE_SCANNER, "Escanear", on_click=lambda e: al_ir_scanner() if al_ir_scanner else None),
+            crear_acceso_rapido(ft.Icons.ADD_CARD, "Recargar", on_click=lambda e: al_ir_recarga() if al_ir_recarga else None),
+            crear_acceso_rapido(ft.Icons.HISTORY, "Historial", on_click=lambda e: al_ir_historial() if al_ir_historial else None),
         ],
     )
 

@@ -1,10 +1,12 @@
 import flet as ft
 
-# Importaciones de vistas y temas
 from frontend.tema.temas import obtener_paleta, COLOR_PRIMARIO
 from frontend.views.login_view import vista_login
 from frontend.views.register_view import vista_register
 from frontend.views.home_view import vista_home
+from frontend.views.scanner_view import vista_scanner
+from frontend.views.recarga_view import vista_recarga
+from frontend.views.historial_view import vista_historial
 
 def main(pagina: ft.Page):
     # ---------- Configuración Base ----------
@@ -13,9 +15,11 @@ def main(pagina: ft.Page):
     pagina.window.width = 420
     pagina.window.height = 860
     pagina.window.min_width = 360
+
+    # Estado global de la aplicación
     estado = {
         "oscuro": True, 
-        "ruta": "login",
+        "ruta": "login", 
         "datos_pasajero": None
     }
 
@@ -50,38 +54,50 @@ def main(pagina: ft.Page):
         estado["datos_pasajero"] = datos_pasajero
         repintar()
 
-    # ---------- Motor de Redibujado (Tema y Rutas) ----------
+    def ir_a_scanner(e=None):
+        estado["ruta"] = "scanner"
+        repintar()
+
+    def ir_a_recarga(e=None):
+        estado["ruta"] = "recarga"
+        repintar()
+    
+    def ir_a_historial(e=None):
+        estado["ruta"] = "historial"
+        repintar()
+        
+    # ---------- Motor de Redibujado ----------
     def alternar_tema():
         estado["oscuro"] = not estado["oscuro"]
         repintar()
 
     def repintar():
-        # 1. Obtenemos los colores actuales
         paleta = obtener_paleta(estado["oscuro"])
 
-        # 2. Actualizamos el chasis global (Fondo y AppBar)
         pagina.bgcolor = paleta["fondo_inicio"]
         pagina.appbar.bgcolor = paleta["tarjeta"]
         titulo_barra.color = paleta["texto_principal"]
         boton_tema.icon = ft.Icons.LIGHT_MODE_OUTLINED if estado["oscuro"] else ft.Icons.DARK_MODE_OUTLINED
 
-        # 3. Limpiamos la pantalla
         pagina.controls.clear()
 
-        # 4. Construimos la vista correspondiente según la ruta actual
         if estado["ruta"] == "login":
             vista = vista_login(pagina, estado["oscuro"], al_iniciar_sesion=ir_a_home, al_ir_registro=ir_a_registro)
         elif estado["ruta"] == "registro":
             vista = vista_register(pagina, estado["oscuro"], al_registro_exitoso=ir_a_login, al_volver_login=ir_a_login)
         elif estado["ruta"] == "home":
-            vista = vista_home(pagina, estado["oscuro"], estado["datos_pasajero"], al_cerrar_sesion=ir_a_login)
-
-        # 5. Agregamos la vista y forzamos la actualización visual
+            vista = vista_home(pagina, estado["oscuro"], estado["datos_pasajero"], al_cerrar_sesion=ir_a_login, al_ir_scanner=ir_a_scanner, al_ir_recarga=ir_a_recarga,al_ir_historial=ir_a_historial)
+        elif estado["ruta"] == "scanner":
+            vista = vista_scanner(pagina, estado["oscuro"], estado["datos_pasajero"], al_volver_home=ir_a_home)
+        elif estado["ruta"] == "recarga":
+            vista = vista_recarga(pagina, estado["oscuro"], estado["datos_pasajero"],al_volver_home=ir_a_home)
+        elif estado["ruta"] == "historial":
+            vista = vista_historial(pagina, estado["oscuro"], estado["datos_pasajero"], al_volver_home=ir_a_home)
+        
         pagina.add(vista)
         pagina.update()
 
-    # Arrancamos la aplicación pintando la primera pantalla
     repintar()
 
 if __name__ == "__main__":
-    ft.app(target=main, assets_dir="frontend/assets")
+    ft.run(main, assets_dir="frontend/assets")
