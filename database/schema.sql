@@ -3,7 +3,8 @@ CREATE TABLE Pasajeros (
     dni VARCHAR(8) UNIQUE NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    clave VARCHAR(255) NOT NULL
+    clave VARCHAR(255) NOT NULL,
+    tipo_pasajero VARCHAR(10) NOT NULL DEFAULT 'General' CHECK (tipo_pasajero IN ('General', 'Medio'))
 );
 
 CREATE TABLE Operadores (
@@ -84,7 +85,8 @@ INSERT INTO Tarifas (tipo_pasajero, monto) VALUES
 ('General - Corredores', 2.20),
 ('Medio - Corredores', 1.10),
 ('Urbano Tradicional - Directo', 3.00),
-('Urbano Tradicional - Intermedio', 2.00);
+('Urbano Tradicional - Intermedio', 2.00),
+('Medio - Urbano Tradicional', 1.50);
 
 INSERT INTO Metodos_Pago (nombre_tipo_pago) VALUES 
 ('Yape'), ('Plin'), ('Tarjeta Visa/Mastercard'), ('Agente Físico');
