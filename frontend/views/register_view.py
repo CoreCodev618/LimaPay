@@ -2,15 +2,10 @@ import asyncio
 import flet as ft
 
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+from backend.dao_pasajeros import dao_pasajeros
 
-# --- Mock temporal del backend (reemplazar por: from backend.dao_pasajeros import registrar_pasajero) ---
 async def registrar_pasajero(nombre: str, dni: str, email: str, clave: str) -> dict:
-    await asyncio.sleep(1) # Simula tiempo de red
-    if len(dni) != 8 or not dni.isdigit():
-        return {"status": False, "mensaje": "El DNI debe tener 8 dígitos"}
-    if not nombre or not email or not clave:
-        return {"status": False, "mensaje": "Todos los campos son obligatorios"}
-    return {"status": True, "mensaje": "Usuario creado exitosamente"}
+    return dao_pasajeros.registrar_pasajero(nombre=nombre,dni=dni,email=email,clave=clave)
 
 def calcular_ancho_tarjeta(ancho_pagina: float | None) -> int:
     if not ancho_pagina:

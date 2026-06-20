@@ -1,10 +1,9 @@
 import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_EXITO, COLOR_ERROR, obtener_paleta
+from backend.dao_transacciones import dao_transacciones
 
 async def procesar_pago_mock(billetera_id: int, bus_id: int) -> dict:
-    import asyncio
-    await asyncio.sleep(1)
-    return {"status": True, "mensaje": f"Viaje Autorizado (Bus {bus_id})", "nuevo_saldo": 22.00}
+    return dao_transacciones.procesar_pago(billetera_id, bus_id)
 
 def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_volver_home=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
@@ -29,9 +28,7 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
         try:
             bus_id = int(campo_bus.value)
             
-            # ------ REEMPLAZA "procesar_pago_mock" POR LA FUNCIÓN REAL DE TU AMIGO ------
             resultado = await procesar_pago_mock(billetera_id, bus_id) 
-            # ------------------------------------------------------------------------------
 
             if resultado["status"]:
                 texto_estado.value = f"¡Pago Exitoso!\n{resultado['mensaje']}\nSaldo: S/ {resultado['nuevo_saldo']:.2f}"

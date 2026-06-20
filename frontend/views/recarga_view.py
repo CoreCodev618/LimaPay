@@ -1,11 +1,10 @@
 import asyncio
 import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_EXITO, COLOR_ERROR, obtener_paleta
+from backend.dao_transacciones import dao_transacciones
 
-# --- Mock del backend ---
 async def recargar_saldo(billetera_id: int, monto: float) -> dict:
-    await asyncio.sleep(1) # Simula tiempo de red
-    return {"status": True, "mensaje": f"Recarga de S/ {monto:.2f} exitosa."}
+    return dao_transacciones.recargar_saldo(billetera_id, monto, 1)
 
 def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_volver_home=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)

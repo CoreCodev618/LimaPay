@@ -1,18 +1,10 @@
 import asyncio
 import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_ERROR, obtener_paleta
+from backend.dao_transacciones import dao_transacciones
 
-# --- Mock del backend ---
 async def obtener_historial_completo(billetera_id: int) -> list:
-    await asyncio.sleep(0.5) # Simula tiempo de carga
-    return [
-        {"fecha_hora": "10/06/2026 14:30", "origen": "Estación Central", "ruta": "Expreso 4", "monto": -3.50},
-        {"fecha_hora": "09/06/2026 08:15", "origen": "Tomas Valle", "ruta": "Alimentador", "monto": -1.50},
-        {"fecha_hora": "08/06/2026 18:40", "origen": "Recarga Virtual", "ruta": "Yape", "monto": 20.00},
-        {"fecha_hora": "07/06/2026 09:10", "origen": "Naranjal", "ruta": "Expreso 2", "monto": -3.50},
-        {"fecha_hora": "05/06/2026 12:00", "origen": "Recarga Efectivo", "ruta": "Taquilla", "monto": 10.00},
-        {"fecha_hora": "04/06/2026 07:30", "origen": "Angamos", "ruta": "Expreso 1", "monto": -3.50},
-    ]
+    return dao_transacciones.obtener_historial(billetera_id, limite=15)
 
 def vista_historial(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_volver_home=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)

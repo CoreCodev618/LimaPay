@@ -2,29 +2,19 @@ import asyncio
 import flet as ft
 
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+from backend.dao_transacciones import dao_transacciones
 
-
-# --- Mocks temporales del backend (reemplazar por: from backend.dao_transacciones import ...) ---
 async def obtener_saldo(billetera_id: int) -> float:
-    await asyncio.sleep(0.6)
-    return 25.50
-
+    return dao_transacciones.obtener_saldo(billetera_id)
 
 async def obtener_historial(billetera_id: int, limite: int = 5) -> list:
-    await asyncio.sleep(0.6)
-    return [
-        {"fecha_hora": "10/06/2026 14:30", "origen": "Estación Central", "ruta": "Expreso 4", "monto": -3.50},
-        {"fecha_hora": "09/06/2026 08:15", "origen": "Tomas Valle", "ruta": "Alimentador", "monto": -1.50},
-        {"fecha_hora": "08/06/2026 18:40", "origen": "Recarga Virtual", "ruta": "Yape", "monto": 20.00},
-    ][:limite]
-
+    return dao_transacciones.obtener_historial(billetera_id, limite)
 
 def calcular_ancho_contenido(ancho_pagina: float | None) -> int:
     """Contenido de 420px en pantallas grandes, se achica en pantallas angostas (mínimo 300px)."""
     if not ancho_pagina:
         return 420
     return int(max(300, min(ancho_pagina - 40, 420)))
-
 
 def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerrar_sesion=None, al_ir_scanner=None, al_ir_recarga=None, al_ir_historial=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)

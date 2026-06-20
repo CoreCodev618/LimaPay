@@ -2,14 +2,10 @@ import asyncio
 import flet as ft
 
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+from backend.dao_pasajeros import dao_pasajeros
 
-
-# --- Mock temporal del backend (reemplazar por: from backend.dao_pasajeros import iniciar_sesion) ---
 async def iniciar_sesion(dni: str, clave: str) -> dict:
-    await asyncio.sleep(1)
-    if len(dni) != 8 or not dni.isdigit():
-        return {"status": False, "mensaje": "El DNI debe tener 8 dígitos"}
-    return {"status": True, "pasajero_id": 1, "billetera_id": 100, "nombre": "Sebastian"}
+    return dao_pasajeros.iniciar_sesion(dni,clave)
 
 
 def calcular_ancho_tarjeta(ancho_pagina: float | None) -> int:
@@ -68,22 +64,6 @@ def vista_login(pagina: ft.Page, modo_oscuro: bool, al_iniciar_sesion=None, al_i
         on_click=lambda e: al_ir_registro() if al_ir_registro else None
     )
     
-    tarjeta = ft.Container(
-        # ...
-        content=ft.Column(
-            spacing=16,
-            controls=[
-                ft.Text("Bienvenido de vuelta", size=20, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
-                ft.Text("Inicia sesión para continuar", size=13, color=paleta["texto_secundario"]),
-                campo_dni,
-                campo_clave,
-                texto_error,
-                boton_login,
-                boton_ir_registro # <--- Botón añadido aquí
-            ],
-        ),
-    )
-
     async def manejar_login(e):
         texto_error.visible = False
 
