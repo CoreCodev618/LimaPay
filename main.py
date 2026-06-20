@@ -7,13 +7,14 @@ from frontend.views.home_view import vista_home
 from frontend.views.scanner_view import vista_scanner
 from frontend.views.recarga_view import vista_recarga
 from frontend.views.historial_view import vista_historial
+from frontend.views.dashboard_view import vista_dashboard
 
 def main(pagina: ft.Page):
     # ---------- Configuración Base ----------
     pagina.title = "LimaPay"
     pagina.padding = 0
     pagina.window.width = 420
-    pagina.window.height = 860
+    pagina.window.height = 800
     pagina.window.min_width = 360
 
     # Estado global de la aplicación
@@ -66,6 +67,10 @@ def main(pagina: ft.Page):
         estado["ruta"] = "historial"
         repintar()
         
+    def ir_a_dashboard(e=None):
+        estado["ruta"] = "dashboard"
+        repintar()
+        
     # ---------- Motor de Redibujado ----------
     def alternar_tema():
         estado["oscuro"] = not estado["oscuro"]
@@ -86,13 +91,15 @@ def main(pagina: ft.Page):
         elif estado["ruta"] == "registro":
             vista = vista_register(pagina, estado["oscuro"], al_registro_exitoso=ir_a_login, al_volver_login=ir_a_login)
         elif estado["ruta"] == "home":
-            vista = vista_home(pagina, estado["oscuro"], estado["datos_pasajero"], al_cerrar_sesion=ir_a_login, al_ir_scanner=ir_a_scanner, al_ir_recarga=ir_a_recarga,al_ir_historial=ir_a_historial)
+            vista = vista_home(pagina, estado["oscuro"], estado["datos_pasajero"], al_cerrar_sesion=ir_a_login, al_ir_scanner=ir_a_scanner, al_ir_recarga=ir_a_recarga,al_ir_historial=ir_a_historial, al_ir_dashboard=ir_a_dashboard)
         elif estado["ruta"] == "scanner":
             vista = vista_scanner(pagina, estado["oscuro"], estado["datos_pasajero"], al_volver_home=ir_a_home)
         elif estado["ruta"] == "recarga":
             vista = vista_recarga(pagina, estado["oscuro"], estado["datos_pasajero"],al_volver_home=ir_a_home)
         elif estado["ruta"] == "historial":
             vista = vista_historial(pagina, estado["oscuro"], estado["datos_pasajero"], al_volver_home=ir_a_home)
+        elif estado["ruta"] == "dashboard":
+            vista = vista_dashboard(pagina, estado["oscuro"], estado["datos_pasajero"], al_volver_home=ir_a_home)
         
         pagina.add(vista)
         pagina.update()
