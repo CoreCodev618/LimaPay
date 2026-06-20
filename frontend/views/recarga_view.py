@@ -1,10 +1,11 @@
 import asyncio
 import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_EXITO, COLOR_ERROR, obtener_paleta
+from frontend.components.alertas import mostrar_notificacion
 from backend.dao_transacciones import dao_transacciones
 
-async def recargar_saldo(billetera_id: int, monto: float) -> dict:
-    return dao_transacciones.recargar_saldo(billetera_id, monto, 1)
+async def recargar_saldo(billetera_id: int, monto: float, metodo_pago_id: int) -> dict:
+    return dao_transacciones.recargar_saldo(billetera_id, monto, metodo_pago_id)
 
 def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_volver_home=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
@@ -12,8 +13,8 @@ def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
 
     # ---------- Elementos de UI ----------
     titulo = ft.Text("Recargar Saldo", size=28, weight=ft.FontWeight.BOLD, color=paleta["texto_principal"])
-    subtitulo = ft.Text("Ingresa el monto a recargar (Min. S/ 5)", size=14, color=paleta["texto_secundario"])
-
+    subtitulo = ft.Text("Selecciona tu método y monto:", size=14, color=paleta["texto_secundario"])
+    
     campo_monto = ft.TextField(
         label="Monto (S/)",
         keyboard_type=ft.KeyboardType.NUMBER,
@@ -26,46 +27,56 @@ def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
         color=paleta["texto_principal"],
     )
 
-    texto_estado = ft.Text("", size=14, visible=False)
+    # Imagen que cambia
+    logo_pago = ft.Image(src="logo-yape.webp", width=70, height=70, fit="contain")
+
+    def cambiar_seleccion(e):
+        logos = {
+            "1": "logo-yape.webp",
+            "2": "logo-plin.webp",
+            "3": "logo-visa.png",
+            "4": "logo-efectivo.webp"
+        }
+        logo_pago.src = logos.get(e.control.value, "logo-yape.webp")
+        pagina.update()
+
+    # Grupo de radios (Checks)
+    grupo_metodos = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="1", label="Yape"),
+            ft.Radio(value="2", label="Plin"),
+            ft.Radio(value="3", label="Tarjeta Visa/Mastercard"),
+            ft.Radio(value="4", label="Agente Físico"),
+        ]),
+        value="1",
+        on_change=cambiar_seleccion
+    )
 
     # ---------- Lógica de validación ----------
     async def manejar_recarga(e):
-        texto_estado.visible = False
-        pagina.update()
-
         try:
             monto = float(campo_monto.value)
             if monto < 5:
-                texto_estado.value = "El monto mínimo es S/ 5."
-                texto_estado.color = COLOR_ERROR
-                texto_estado.visible = True
-                pagina.update()
+                mostrar_notificacion(pagina, "El monto mínimo es S/ 5.", es_error=True)
                 return
         except ValueError:
-            texto_estado.value = "Ingresa un número válido."
-            texto_estado.color = COLOR_ERROR
-            texto_estado.visible = True
-            pagina.update()
+            mostrar_notificacion(pagina, "Ingresa un número válido.", es_error=True)
             return
 
-        # Animación de carga
         boton_recargar.content = ft.ProgressRing(width=18, height=18, color="#0A0E1A", stroke_width=2)
         pagina.update()
 
-        resultado = await recargar_saldo(billetera_id, monto)
+        metodo_id = int(grupo_metodos.value)
+        resultado = await recargar_saldo(billetera_id, monto, metodo_id)
 
-        # Restaurar botón
         boton_recargar.content = ft.Text("Confirmar Recarga", color="#0A0E1A", weight=ft.FontWeight.BOLD)
 
         if resultado["status"]:
-            texto_estado.value = resultado["mensaje"]
-            texto_estado.color = COLOR_EXITO
-            campo_monto.value = "" # Limpia el campo tras el éxito
+            mostrar_notificacion(pagina, resultado["mensaje"], es_error=False)
+            campo_monto.value = "" 
         else:
-            texto_estado.value = resultado.get("mensaje", "Error en la recarga.")
-            texto_estado.color = COLOR_ERROR
+            mostrar_notificacion(pagina, resultado.get("mensaje", "Error en la recarga."), es_error=True)
         
-        texto_estado.visible = True
         pagina.update()
 
     # ---------- Botones ----------
@@ -91,9 +102,16 @@ def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
         border_radius=24,
         bgcolor=paleta["tarjeta"],
         content=ft.Column(
-            spacing=16,
+            spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[titulo, subtitulo, campo_monto, texto_estado, boton_recargar, boton_volver],
+            controls=[
+                titulo, 
+                subtitulo, 
+                campo_monto, 
+                ft.Row([logo_pago, grupo_metodos], alignment=ft.MainAxisAlignment.START),
+                boton_recargar, 
+                boton_volver
+            ],
         ),
     )
 

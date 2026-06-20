@@ -2,6 +2,7 @@ import asyncio
 import flet as ft
 
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+from frontend.components.tarjeta_movimiento import crear_fila_historial
 from backend.dao_transacciones import dao_transacciones
 
 async def obtener_saldo(billetera_id: int) -> float:
@@ -11,18 +12,22 @@ async def obtener_historial(billetera_id: int, limite: int = 5) -> list:
     return dao_transacciones.obtener_historial(billetera_id, limite)
 
 def calcular_ancho_contenido(ancho_pagina: float | None) -> int:
-    """Contenido de 420px en pantallas grandes, se achica en pantallas angostas (mínimo 300px)."""
     if not ancho_pagina:
         return 420
     return int(max(300, min(ancho_pagina - 40, 420)))
 
-def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerrar_sesion=None, al_ir_scanner=None, al_ir_recarga=None, al_ir_historial=None) -> ft.Container:
+def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerrar_sesion=None, al_ir_scanner=None, al_ir_recarga=None, al_ir_historial=None, al_ir_dashboard=None  ) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
     billetera_id = datos_pasajero.get("billetera_id")
     nombre = datos_pasajero.get("nombre", "")
 
-    # ---------- Encabezado ----------
-    texto_saludo = ft.Text(f"Hola, {nombre} 👋", size=18, weight=ft.FontWeight.W_600, color=paleta["texto_principal"])
+# ---------- Encabezado ----------
+    avatar = ft.CircleAvatar(
+        content=ft.Text(nombre[0].upper() if nombre else "U", weight=ft.FontWeight.BOLD, color="#0A0E1A"),
+        bgcolor=COLOR_PRIMARIO,
+        radius=18,
+    )
+    texto_saludo = ft.Text(f"Hola, {nombre}", size=18, weight=ft.FontWeight.W_600, color=paleta["texto_principal"])
 
     boton_cerrar_sesion = ft.IconButton(
         icon=ft.Icons.LOGOUT,
@@ -33,7 +38,10 @@ def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerr
 
     encabezado = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        controls=[texto_saludo, boton_cerrar_sesion],
+        controls=[
+            ft.Row([avatar, texto_saludo], spacing=12), 
+            boton_cerrar_sesion
+        ],
     )
 
     # ---------- Tarjeta de saldo ----------
@@ -91,39 +99,16 @@ def vista_home(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_cerr
             crear_acceso_rapido(ft.Icons.QR_CODE_SCANNER, "Escanear", on_click=lambda e: al_ir_scanner() if al_ir_scanner else None),
             crear_acceso_rapido(ft.Icons.ADD_CARD, "Recargar", on_click=lambda e: al_ir_recarga() if al_ir_recarga else None),
             crear_acceso_rapido(ft.Icons.HISTORY, "Historial", on_click=lambda e: al_ir_historial() if al_ir_historial else None),
+            crear_acceso_rapido(ft.Icons.BAR_CHART, "Top Rutas", on_click=lambda e: al_ir_dashboard() if al_ir_dashboard else None),
         ],
     )
 
     # ---------- Historial de transacciones ----------
     lista_historial = ft.Column(spacing=10)
 
-    def crear_fila_historial(item: dict) -> ft.Container:
-        es_ingreso = item["monto"] > 0
-        color_monto = "#22E0A6" if es_ingreso else COLOR_ERROR
-        signo = "+" if es_ingreso else ""
-
-        return ft.Container(
-            padding=14,
-            border_radius=14,
-            bgcolor=paleta["tarjeta"],
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                controls=[
-                    ft.Column(
-                        spacing=2,
-                        controls=[
-                            ft.Text(item["ruta"], size=14, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
-                            ft.Text(f'{item["origen"]} · {item["fecha_hora"]}', size=11, color=paleta["texto_secundario"]),
-                        ],
-                    ),
-                    ft.Text(f'{signo}S/ {abs(item["monto"]):.2f}', size=14, weight=ft.FontWeight.BOLD, color=color_monto),
-                ],
-            ),
-        )
-
     async def cargar_historial():
         movimientos = await obtener_historial(billetera_id, limite=5)
-        lista_historial.controls = [crear_fila_historial(item) for item in movimientos]
+        lista_historial.controls = [crear_fila_historial(item, modo_oscuro) for item in movimientos]
         pagina.update()
 
     pagina.run_task(cargar_historial)

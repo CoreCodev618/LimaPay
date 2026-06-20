@@ -1,6 +1,7 @@
 import asyncio
 import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_ERROR, obtener_paleta
+from frontend.components.tarjeta_movimiento import crear_fila_historial
 from backend.dao_transacciones import dao_transacciones
 
 async def obtener_historial_completo(billetera_id: int) -> list:
@@ -16,35 +17,22 @@ def vista_historial(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al
     lista_movimientos = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO, expand=True)
     progreso = ft.ProgressRing(color=COLOR_PRIMARIO)
 
-    def crear_fila_historial(item: dict) -> ft.Container:
-        es_ingreso = item["monto"] > 0
-        color_monto = "#22E0A6" if es_ingreso else COLOR_ERROR
-        signo = "+" if es_ingreso else ""
-
-        return ft.Container(
-            padding=14,
-            border_radius=14,
-            bgcolor=paleta["tarjeta"],
-            content=ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                controls=[
-                    ft.Column(
-                        spacing=2,
-                        controls=[
-                            ft.Text(item["ruta"], size=14, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
-                            ft.Text(f'{item["origen"]} · {item["fecha_hora"]}', size=11, color=paleta["texto_secundario"]),
-                        ],
-                    ),
-                    ft.Text(f'{signo}S/ {abs(item["monto"]):.2f}', size=14, weight=ft.FontWeight.BOLD, color=color_monto),
-                ],
-            ),
-        )
-
     # Cargar datos al abrir la vista
     async def cargar_datos():
         movimientos = await obtener_historial_completo(billetera_id)
-        lista_movimientos.controls = [crear_fila_historial(m) for m in movimientos]
         progreso.visible = False
+        
+        if not movimientos:
+            lista_movimientos.controls = [
+                ft.Container(
+                    padding=40,
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Text("Aún no tienes movimientos", color=paleta["texto_secundario"], italic=True)
+                )
+            ]
+        else:
+            lista_movimientos.controls = [crear_fila_historial(item, modo_oscuro) for item in movimientos]
+            
         pagina.update()
 
     pagina.run_task(cargar_datos)

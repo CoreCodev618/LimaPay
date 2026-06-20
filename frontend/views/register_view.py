@@ -2,6 +2,7 @@ import asyncio
 import flet as ft
 
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERROR, obtener_paleta
+from frontend.components.alertas import mostrar_notificacion
 from backend.dao_pasajeros import dao_pasajeros
 
 async def registrar_pasajero(nombre: str, dni: str, email: str, clave: str) -> dict:
@@ -30,8 +31,6 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
     campo_email = ft.TextField(label="Correo electrónico", prefix_icon=ft.Icons.EMAIL_OUTLINED, **estilo_campo)
     campo_clave = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, prefix_icon=ft.Icons.LOCK_OUTLINE, **estilo_campo)
 
-    texto_error = ft.Text(color=COLOR_ERROR, size=13, visible=False)
-
     # ---------- Botones ----------
     texto_boton_registro = ft.Text("Crear cuenta", color="#0A0E1A", weight=ft.FontWeight.BOLD)
     boton_registro = ft.Container(
@@ -50,7 +49,6 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
     )
 
     async def manejar_registro(e):
-        texto_error.visible = False
         boton_registro.content = ft.ProgressRing(width=18, height=18, color="#0A0E1A", stroke_width=2)
         pagina.update()
 
@@ -64,12 +62,11 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
         boton_registro.content = texto_boton_registro
 
         if resultado["status"]:
-            # Si el registro es exitoso, redirigimos al login
+            mostrar_notificacion(pagina, "Cuenta creada exitosamente", es_error=False)
             if al_volver_login:
                 al_volver_login()
         else:
-            texto_error.value = resultado.get("mensaje", "Error al registrar")
-            texto_error.visible = True
+            mostrar_notificacion(pagina, resultado.get("mensaje", "Error al registrar"), es_error=True)
         pagina.update()
 
     boton_registro.on_click = manejar_registro
@@ -91,7 +88,6 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
                 campo_dni,
                 campo_email,
                 campo_clave,
-                texto_error,
                 boton_registro,
                 ft.Container(content=boton_volver, alignment=ft.Alignment.CENTER)
             ],
