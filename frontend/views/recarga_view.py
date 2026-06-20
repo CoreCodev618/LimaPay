@@ -41,12 +41,13 @@ def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
         pagina.update()
 
     # Grupo de radios (Checks)
+    estilo_etiqueta_radio = ft.TextStyle(color=paleta["texto_principal"])
     grupo_metodos = ft.RadioGroup(
         content=ft.Column([
-            ft.Radio(value="1", label="Yape"),
-            ft.Radio(value="2", label="Plin"),
-            ft.Radio(value="3", label="Tarjeta Visa/Mastercard"),
-            ft.Radio(value="4", label="Agente Físico"),
+            ft.Radio(value="1", label="Yape", label_style=estilo_etiqueta_radio),
+            ft.Radio(value="2", label="Plin", label_style=estilo_etiqueta_radio),
+            ft.Radio(value="3", label="Tarjeta Visa/Mastercard", label_style=estilo_etiqueta_radio),
+            ft.Radio(value="4", label="Agente Físico", label_style=estilo_etiqueta_radio),
         ]),
         value="1",
         on_change=cambiar_seleccion
