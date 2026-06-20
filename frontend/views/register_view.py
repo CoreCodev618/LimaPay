@@ -5,8 +5,8 @@ from frontend.tema.temas import COLOR_PRIMARIO, COLOR_PRIMARIO_OSCURO, COLOR_ERR
 from frontend.components.alertas import mostrar_notificacion
 from backend.dao_pasajeros import dao_pasajeros
 
-async def registrar_pasajero(nombre: str, dni: str, email: str, clave: str) -> dict:
-    return dao_pasajeros.registrar_pasajero(nombre=nombre,dni=dni,email=email,clave=clave)
+async def registrar_pasajero(nombre: str, dni: str, email: str, clave: str, tipo_pasajero: str = "General") -> dict:
+    return dao_pasajeros.registrar_pasajero(nombre=nombre, dni=dni, email=email, clave=clave, tipo_pasajero=tipo_pasajero)
 
 def calcular_ancho_tarjeta(ancho_pagina: float | None) -> int:
     if not ancho_pagina:
@@ -30,6 +30,17 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
     campo_dni = ft.TextField(label="DNI", max_length=8, keyboard_type=ft.KeyboardType.NUMBER, prefix_icon=ft.Icons.BADGE_OUTLINED, **estilo_campo)
     campo_email = ft.TextField(label="Correo electrónico", prefix_icon=ft.Icons.EMAIL_OUTLINED, **estilo_campo)
     campo_clave = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, prefix_icon=ft.Icons.LOCK_OUTLINE, **estilo_campo)
+
+    # ---------- Tipo de pasajero (General / Medio pasaje) ----------
+    estilo_etiqueta_radio = ft.TextStyle(color=paleta["texto_principal"])
+    texto_tipo_pasajero = ft.Text("Tipo de pasajero", size=13, color=paleta["texto_secundario"])
+    grupo_tipo_pasajero = ft.RadioGroup(
+        content=ft.Row([
+            ft.Radio(value="General", label="General", label_style=estilo_etiqueta_radio),
+            ft.Radio(value="Medio", label="Medio Pasaje", label_style=estilo_etiqueta_radio),
+        ]),
+        value="General",
+    )
 
     # ---------- Botones ----------
     texto_boton_registro = ft.Text("Crear cuenta", color="#0A0E1A", weight=ft.FontWeight.BOLD)
@@ -56,7 +67,8 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
             nombre=campo_nombre.value or "",
             dni=campo_dni.value or "",
             email=campo_email.value or "",
-            clave=campo_clave.value or ""
+            clave=campo_clave.value or "",
+            tipo_pasajero=grupo_tipo_pasajero.value or "General"
         )
 
         boton_registro.content = texto_boton_registro
@@ -88,6 +100,8 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
                 campo_dni,
                 campo_email,
                 campo_clave,
+                texto_tipo_pasajero,
+                grupo_tipo_pasajero,
                 boton_registro,
                 ft.Container(content=boton_volver, alignment=ft.Alignment.CENTER)
             ],

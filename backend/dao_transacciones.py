@@ -6,13 +6,14 @@ logger = logging.getLogger("limapay.transacciones")
 logger.setLevel(logging.DEBUG)
 
 TARIFA_POR_OPERADOR = {
-    1: 1,
-    2: 3,
-    3: 3,
-    4: 3,
-    5: 5,
-    6: 5,
-    7: 5,
+    # operador_id: {"General": nombre_tarifa, "Medio": nombre_tarifa}
+    1: {"General": "General - Metropolitano", "Medio": "Medio - Metropolitano"},
+    2: {"General": "General - Corredores", "Medio": "Medio - Corredores"},
+    3: {"General": "General - Corredores", "Medio": "Medio - Corredores"},
+    4: {"General": "General - Corredores", "Medio": "Medio - Corredores"},
+    5: {"General": "Urbano Tradicional - Directo", "Medio": "Medio - Urbano Tradicional"},
+    6: {"General": "Urbano Tradicional - Directo", "Medio": "Medio - Urbano Tradicional"},
+    7: {"General": "Urbano Tradicional - Directo", "Medio": "Medio - Urbano Tradicional"},
 }
 
 class DAOTransacciones:
@@ -30,13 +31,16 @@ class DAOTransacciones:
             logger.error(f"Error en obtener_saldo billetera_id={billetera_id}: {type(e).__name__}: {e}")
             return -1.0
 
-    def procesar_pago(self, billetera_id: int, placa_bus: str) -> dict:
+    def procesar_pago(self, billetera_id: int, placa_bus: str, tipo_pasajero: str = "General") -> dict:
         sql_bus = "SELECT id, operador_id FROM Buses WHERE placa = %s LIMIT 1;"
         sql_bloquear = "SELECT saldo_actual, estado_activa FROM Billeteras WHERE id = %s FOR UPDATE;"
-        sql_monto = "SELECT monto FROM Tarifas WHERE id = %s;"
+        sql_tarifa = "SELECT id, monto FROM Tarifas WHERE tipo_pasajero = %s LIMIT 1;"
         sql_desc = "UPDATE Billeteras SET saldo_actual = saldo_actual - %s WHERE id = %s RETURNING saldo_actual;"
         sql_viaje = "INSERT INTO Viajes (billetera_id, bus_id, ruta_id, tarifa_id, estacion_origen_id) VALUES (%s, %s, %s, %s, %s);"
-        
+
+        if tipo_pasajero not in ("General", "Medio"):
+            tipo_pasajero = "General"
+
         try:
             with db.obtener_cursor() as cur:
                 # 1. Buscar Bus por Placa
@@ -54,10 +58,15 @@ class DAOTransacciones:
                     return {"status": False, "mensaje": "Billetera inactiva."}
                 saldo_actual = float(fila_billetera["saldo_actual"])
 
-                # 3. Calcular Tarifa según el operador del bus
-                tarifa_id = TARIFA_POR_OPERADOR.get(operador_id, 3)
-                cur.execute(sql_monto, (tarifa_id,))
-                monto_tarifa = float(cur.fetchone()["monto"])
+                # 3. Calcular Tarifa según el operador del bus Y el tipo de pasajero
+                nombres_tarifa = TARIFA_POR_OPERADOR.get(operador_id, TARIFA_POR_OPERADOR[3])
+                nombre_tarifa = nombres_tarifa.get(tipo_pasajero, nombres_tarifa["General"])
+                cur.execute(sql_tarifa, (nombre_tarifa,))
+                fila_tarifa = cur.fetchone()
+                if not fila_tarifa:
+                    return {"status": False, "mensaje": "Tarifa no configurada para este operador."}
+                tarifa_id = fila_tarifa["id"]
+                monto_tarifa = float(fila_tarifa["monto"])
 
                 if saldo_actual < monto_tarifa:
                     return {"status": False, "mensaje": f"Saldo insuficiente (S/ {saldo_actual:.2f})"}
@@ -71,7 +80,7 @@ class DAOTransacciones:
                 ruta_id = fila_ruta["id"] if fila_ruta else 1
                 
                 cur.execute(sql_viaje, (billetera_id, bus_id, ruta_id, tarifa_id, 1))
-                logger.info(f"Viaje autorizado: placa={placa_bus}, nuevo_saldo={nuevo_saldo}")
+                logger.info(f"Viaje autorizado: placa={placa_bus}, tipo_pasajero={tipo_pasajero}, nuevo_saldo={nuevo_saldo}")
                 
                 return {"status": True, "mensaje": "Viaje Autorizado", "nuevo_saldo": nuevo_saldo}
         except Exception as e:
