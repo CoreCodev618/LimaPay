@@ -16,7 +16,7 @@ class DAOPasajeros:
         clave_hash = _hashear_clave(clave)
         logger.debug(f"Intentando login para DNI={dni}")
         sql = """
-            SELECT p.id AS pasajero_id, p.nombre, b.id AS billetera_id
+            SELECT p.id AS pasajero_id, p.nombre, p.tipo_pasajero, b.id AS billetera_id
             FROM Pasajeros p
             JOIN Billeteras b ON b.pasajero_id = p.id
             WHERE p.dni = %s AND p.clave = %s AND b.estado_activa = TRUE
@@ -34,13 +34,14 @@ class DAOPasajeros:
                     "status": True,
                     "pasajero_id": int(fila["pasajero_id"]),
                     "billetera_id": int(fila["billetera_id"]),
-                    "nombre": str(fila["nombre"])
+                    "nombre": str(fila["nombre"]),
+                    "tipo_pasajero": str(fila["tipo_pasajero"])
                 }
         except Exception as e:
             logger.error(f"Error en iniciar_sesion DNI={dni}: {type(e).__name__}: {e}")
             return {"status": False, "mensaje": f"Error de BD: {type(e).__name__}"}
 
-    def registrar_pasajero(self, dni: str, nombre: str, email: str, clave: str) -> dict:
+    def registrar_pasajero(self, dni: str, nombre: str, email: str, clave: str, tipo_pasajero: str = "General") -> dict:
         if not dni or len(dni) != 8 or not dni.isdigit():
             return {"status": False, "mensaje": "DNI inválido (debe tener 8 dígitos numéricos)"}
         if not nombre or not nombre.strip():
@@ -49,17 +50,19 @@ class DAOPasajeros:
             return {"status": False, "mensaje": "Email inválido"}
         if not clave or len(clave) < 4:
             return {"status": False, "mensaje": "La contraseña debe tener al menos 4 caracteres"}
+        if tipo_pasajero not in ("General", "Medio"):
+            tipo_pasajero = "General"
         clave_hash = _hashear_clave(clave)
-        logger.debug(f"Registrando pasajero DNI={dni}, email={email}")
-        sql_p = "INSERT INTO Pasajeros (dni, nombre, email, clave) VALUES (%s, %s, %s, %s) RETURNING id;"
+        logger.debug(f"Registrando pasajero DNI={dni}, email={email}, tipo_pasajero={tipo_pasajero}")
+        sql_p = "INSERT INTO Pasajeros (dni, nombre, email, clave, tipo_pasajero) VALUES (%s, %s, %s, %s, %s) RETURNING id;"
         sql_b = "INSERT INTO Billeteras (pasajero_id, saldo_actual, estado_activa) VALUES (%s, 0.00, TRUE) RETURNING id;"
         try:
             with db.obtener_cursor() as cur:
-                cur.execute(sql_p, (dni, nombre.strip(), email.strip().lower(), clave_hash))
+                cur.execute(sql_p, (dni, nombre.strip(), email.strip().lower(), clave_hash, tipo_pasajero))
                 pasajero_id = cur.fetchone()["id"]
                 cur.execute(sql_b, (pasajero_id,))
                 billetera_id = cur.fetchone()["id"]
-                logger.info(f"Pasajero registrado: id={pasajero_id}, billetera_id={billetera_id}")
+                logger.info(f"Pasajero registrado: id={pasajero_id}, billetera_id={billetera_id}, tipo_pasajero={tipo_pasajero}")
                 return {"status": True, "pasajero_id": pasajero_id, "billetera_id": billetera_id}
         except psycopg2.errors.UniqueViolation as e:
             logger.warning(f"UniqueViolation al registrar DNI={dni}: {e}")

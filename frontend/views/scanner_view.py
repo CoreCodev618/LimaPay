@@ -2,12 +2,13 @@ import flet as ft
 from frontend.tema.temas import COLOR_PRIMARIO, COLOR_EXITO, COLOR_ERROR, obtener_paleta
 from backend.dao_transacciones import dao_transacciones
 
-async def procesar_pago_mock(billetera_id: int, placa_bus: str) -> dict:
-    return dao_transacciones.procesar_pago(billetera_id, placa_bus)
+async def procesar_pago_mock(billetera_id: int, placa_bus: str, tipo_pasajero: str = "General") -> dict:
+    return dao_transacciones.procesar_pago(billetera_id, placa_bus, tipo_pasajero)
 
 def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_volver_home=None) -> ft.Container:
     paleta = obtener_paleta(modo_oscuro)
     billetera_id = datos_pasajero.get("billetera_id")
+    tipo_pasajero = datos_pasajero.get("tipo_pasajero", "General")
 
     texto_estado = ft.Text("Simulador de Escáner QR", size=18, color=paleta["texto_principal"], weight=ft.FontWeight.BOLD)
     
@@ -24,13 +25,13 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
     )
 
     async def simular_escaneo(e):
-        texto_estado.value = "Procesando pago..."
+        texto_estado.value = f"Procesando pago ({tipo_pasajero})..."
         texto_estado.color = paleta["texto_principal"]
         boton_simular.content = ft.ProgressRing(width=18, height=18, color="#0A0E1A", stroke_width=2)
         pagina.update()
 
         placa_bus = campo_bus.value.strip()
-        resultado = await procesar_pago_mock(billetera_id, placa_bus) 
+        resultado = await procesar_pago_mock(billetera_id, placa_bus, tipo_pasajero)
 
         boton_simular.content = ft.Text("Simular Lectura de QR", color="#0A0E1A", weight=ft.FontWeight.BOLD)
 
