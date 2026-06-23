@@ -1,0 +1,27 @@
+[project]
+name = "limapay"
+version = "1.0.0"
+description = "LimaPay - Billetera digital para transporte público en Lima"
+requires-python = ">=3.10"
+dependencies = [
+    "flet>=0.81.0",
+    "flet-camera",
+    "psycopg2-binary",
+    "python-dotenv",
+    "opencv-python-headless",
+    "numpy",
+    "qrcode",
+]
+
+[tool.flet]
+org = "com.limapay"
+product = "LimaPay"
+company = "LimaPay"
+
+[tool.flet.android.permission]
+"android.permission.CAMERA" = true
+"android.permission.INTERNET" = true
+
+[tool.flet.android.feature]
+"android.hardware.camera" = true
+"android.hardware.camera.autofocus" = true
