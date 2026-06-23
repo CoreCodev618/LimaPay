@@ -4,7 +4,19 @@ CREATE TABLE Pasajeros (
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     clave VARCHAR(255) NOT NULL,
-    tipo_pasajero VARCHAR(10) NOT NULL DEFAULT 'General' CHECK (tipo_pasajero IN ('General', 'Medio'))
+    tipo_pasajero VARCHAR(10) NOT NULL DEFAULT 'General' CHECK (tipo_pasajero IN ('General', 'Medio')),
+    medio_pasaje_verificado BOOLEAN DEFAULT FALSE,
+    pregunta_seguridad VARCHAR(100),
+    respuesta_seguridad VARCHAR(255)
+);
+
+CREATE TABLE Solicitudes_Medio_Pasaje (
+    id SERIAL PRIMARY KEY,
+    pasajero_id INT NOT NULL REFERENCES Pasajeros(id) ON DELETE CASCADE,
+    codigo_institucional VARCHAR(30) NOT NULL,
+    estado VARCHAR(15) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Aprobado', 'Rechazado')),
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_resolucion TIMESTAMP
 );
 
 CREATE TABLE Operadores (
@@ -34,7 +46,8 @@ CREATE TABLE Billeteras (
     id SERIAL PRIMARY KEY,
     pasajero_id INT UNIQUE NOT NULL REFERENCES Pasajeros(id) ON DELETE CASCADE,
     saldo_actual DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
-    estado_activa BOOLEAN DEFAULT TRUE
+    estado_activa BOOLEAN DEFAULT TRUE,
+    umbral_alerta DECIMAL(10,2) DEFAULT 5.00 NOT NULL
 );
 
 CREATE TABLE Rutas (
@@ -68,7 +81,7 @@ CREATE TABLE Viajes (
 );
 
 -- ==========================================
--- INSERCIÓN DE CATÁLOGOS ESTÁTICOS (REALISMO EXTENDIDO)
+-- INSERCIÓN DE CATÁLOGOS ESTÁTICOS
 -- ==========================================
 INSERT INTO Operadores (nombre_empresa) VALUES 
 ('ATU - Metropolitano'),
