@@ -1,27 +1,29 @@
+"""Paleta de colores y temas de LimaPay (modo claro/oscuro)."""
 
-COLOR_PRIMARIO = "#22D3EE"
-COLOR_PRIMARIO_OSCURO = "#2563EB"
-COLOR_ERROR = "#FF5C7A"
+COLOR_PRIMARIO = "#22E0A6"
+COLOR_PRIMARIO_OSCURO = "#0E9E73"
+COLOR_ERROR = "#FF5C5C"
 COLOR_EXITO = "#22E0A6"
+COLOR_ADVERTENCIA = "#FFB020"
 
-PALETA_OSCURA = {
+_PALETA_OSCURA = {
     "fondo_inicio": "#0A0E1A",
-    "fondo_fin": "#0D1326",
-    "tarjeta": "#141B2E",
-    "campo": "#1B2440",
-    "texto_principal": "#F4F6FB",
-    "texto_secundario": "#8A93B0",
+    "fondo_fin": "#10172A",
+    "tarjeta": "#161E2E",
+    "campo": "#1D2738",
+    "texto_principal": "#F5F7FA",
+    "texto_secundario": "#8A93A6",
 }
 
-PALETA_CLARA = {
-    "fondo_inicio": "#EAF2FB",
-    "fondo_fin": "#FFFFFF",
+_PALETA_CLARA = {
+    "fondo_inicio": "#F4F6FA",
+    "fondo_fin": "#E8ECF5",
     "tarjeta": "#FFFFFF",
-    "campo": "#F0F4FA",
-    "texto_principal": "#101522",
-    "texto_secundario": "#5C6680",
+    "campo": "#F0F2F7",
+    "texto_principal": "#0A0E1A",
+    "texto_secundario": "#5B6477",
 }
 
 
 def obtener_paleta(modo_oscuro: bool) -> dict:
-    return PALETA_OSCURA if modo_oscuro else PALETA_CLARA
+    return _PALETA_OSCURA if modo_oscuro else _PALETA_CLARA
