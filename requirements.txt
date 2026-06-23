@@ -1,0 +1,7 @@
+flet>=0.81.0
+flet-camera
+psycopg2-binary
+python-dotenv
+opencv-python-headless
+numpy
+qrcode
