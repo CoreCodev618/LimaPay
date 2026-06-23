@@ -1,25 +1,16 @@
 import flet as ft
-from frontend.tema.temas import COLOR_ERROR
+from frontend.tema.temas import COLOR_ERROR, COLOR_EXITO, COLOR_ADVERTENCIA
 
-def mostrar_notificacion(pagina: ft.Page, mensaje: str, es_error: bool = True):
-    color_fondo = COLOR_ERROR if es_error else "#22E0A6"
-    snack = ft.SnackBar(
+_COLORES = {"error": COLOR_ERROR, "exito": COLOR_EXITO, "advertencia": COLOR_ADVERTENCIA}
+
+
+def mostrar_notificacion(pagina: ft.Page, mensaje: str, es_error: bool = True, tipo: str = None):
+    """tipo: 'error' | 'exito' | 'advertencia'. Si no se pasa, se infiere de es_error (compatibilidad)."""
+    tipo = tipo or ("error" if es_error else "exito")
+    pagina.show_dialog(ft.SnackBar(
         content=ft.Text(mensaje, color="#FFFFFF", weight=ft.FontWeight.W_600),
-        bgcolor=color_fondo,
+        bgcolor=_COLORES.get(tipo, COLOR_ERROR),
         duration=3000,
         behavior=ft.SnackBarBehavior.FLOATING,
-        margin=20
-    )
-import flet as ft
-from frontend.tema.temas import COLOR_ERROR
-
-def mostrar_notificacion(pagina: ft.Page, mensaje: str, es_error: bool = True):
-    color_fondo = COLOR_ERROR if es_error else "#22E0A6"
-    snack = ft.SnackBar(
-        content=ft.Text(mensaje, color="#FFFFFF", weight=ft.FontWeight.W_600),
-        bgcolor=color_fondo,
-        duration=3000,
-        behavior=ft.SnackBarBehavior.FLOATING,
-        margin=20
-    )
-    pagina.show_dialog(snack)
+        margin=20,
+    ))
