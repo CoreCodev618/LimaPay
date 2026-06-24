@@ -26,6 +26,19 @@ def main(pagina: ft.Page):
     titulo_barra = ft.Text("LimaPay", weight=ft.FontWeight.BOLD)
     pagina.appbar = ft.AppBar(title=titulo_barra, center_title=False, actions=[boton_tema])
 
+    # --- NUEVO: BARRA DE NAVEGACIÓN INFERIOR (Flet 0.81) ---
+    barra_navegacion = ft.NavigationBar(
+        selected_index=0,
+        on_change=lambda e: navegar(["home", "dashboard", "scanner", "historial", "perfil"][e.control.selected_index], datos_pasajero=estado["datos_pasajero"]),
+        destinations=[
+                  ft.NavigationBarDestination(icon=ft.Icons.HOME_OUTLINED, selected_icon=ft.Icons.HOME, label="Inicio"),
+            ft.NavigationBarDestination(icon=ft.Icons.MAP_OUTLINED, selected_icon=ft.Icons.MAP, label="Rutas"),
+            ft.NavigationBarDestination(icon=ft.Icons.QR_CODE_SCANNER_OUTLINED, selected_icon=ft.Icons.QR_CODE_SCANNER, label="Escanear"),
+            ft.NavigationBarDestination(icon=ft.Icons.HISTORY_OUTLINED, selected_icon=ft.Icons.HISTORY, label="Historial"),
+            ft.NavigationBarDestination(icon=ft.Icons.PERSON_OUTLINE, selected_icon=ft.Icons.PERSON, label="Perfil"),
+        ]
+    )
+
     # ---------- Navegación ----------
     def navegar(ruta: str, **datos):
         estado["ruta"] = ruta
@@ -70,11 +83,35 @@ def main(pagina: ft.Page):
     # ---------- Motor de redibujado ----------
     def repintar():
         paleta = obtener_paleta(estado["oscuro"])
-        pagina.bgcolor = paleta["fondo_inicio"]
-        pagina.appbar.bgcolor = paleta["tarjeta"]
+        
+        # --- NUEVO: FONDO DEGRADADO GLOBAL PREMIUM ---
+        pagina.decoration = ft.BoxDecoration(
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_LEFT,
+                end=ft.Alignment.BOTTOM_RIGHT,
+                colors=[
+                    paleta["fondo_inicio"],
+                    "#1A2942" if estado["oscuro"] else "#E2E8F4", # Tono intermedio para dar profundidad
+                    paleta["fondo_fin"]
+                ],
+            )
+        )
+        pagina.bgcolor = "transparent"
+        pagina.appbar.bgcolor = "transparent" # Se funde con el fondo
+        
         titulo_barra.color = paleta["texto_principal"]
         boton_tema.icon = ft.Icons.LIGHT_MODE_OUTLINED if estado["oscuro"] else ft.Icons.DARK_MODE_OUTLINED
 
+        # --- LOGICA DE LA BARRA INFERIOR ---
+        rutas_con_barra = ["home", "dashboard", "scanner", "historial", "perfil"]
+        if estado["ruta"] in rutas_con_barra:
+            barra_navegacion.bgcolor = paleta["tarjeta"]
+            barra_navegacion.indicator_color = "#22E0A640" # Verde primario con transparencia
+            barra_navegacion.selected_index = rutas_con_barra.index(estado["ruta"])
+            pagina.navigation_bar = barra_navegacion
+        else:
+            pagina.navigation_bar = None
+        
         pagina.controls.clear()
         pagina.add(construir_vista())
         pagina.update()
