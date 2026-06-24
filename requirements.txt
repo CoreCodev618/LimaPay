@@ -1,5 +1,6 @@
 flet>=0.81.0
 flet-camera
+let-charts
 psycopg2-binary
 python-dotenv
 opencv-python-headless
