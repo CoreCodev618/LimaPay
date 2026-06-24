@@ -140,6 +140,6 @@ def vista_perfil(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_vo
     ]
 
     return ft.Container(
-        expand=True, padding=20, bgcolor=paleta["fondo_inicio"],
+        expand=True, padding=20, bgcolor="transparent",
         content=ft.Column(spacing=16, scroll=ft.ScrollMode.AUTO, controls=contenido),
     )

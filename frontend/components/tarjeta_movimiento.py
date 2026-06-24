@@ -10,15 +10,15 @@ def crear_fila_historial(item: dict, modo_oscuro: bool) -> ft.Container:
     color_icono = COLOR_EXITO if es_ingreso else paleta["texto_secundario"]
 
     return ft.Container(
-        padding=14,
+        padding=20,
         border_radius=14,
         bgcolor=paleta["tarjeta"],
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
-                ft.Row(spacing=12, controls=[
+                ft.Row(expand=True, spacing=12, controls=[
                     ft.Icon(icono, color=color_icono, size=20),
-                    ft.Column(spacing=2, controls=[
+                    ft.Column(expand=True,spacing=2, controls=[
                         ft.Text(item["ruta"], size=14, weight=ft.FontWeight.W_600, color=paleta["texto_principal"]),
                         ft.Text(f'{item["origen"]} · {item["fecha_hora"]}', size=11, color=paleta["texto_secundario"]),
                     ]),

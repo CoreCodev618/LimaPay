@@ -73,7 +73,7 @@ def fondo_pantalla(paleta: dict, contenido, vertical: bool = True, expandir_cont
         expand=True,
         alignment=alineacion,
         padding=20,
-        gradient=ft.LinearGradient(begin=inicio, end=fin, colors=[paleta["fondo_inicio"], paleta["fondo_fin"]]),
+        bgcolor="transparent",
         content=contenido,
     )
 
@@ -87,7 +87,7 @@ def pantalla_simple(paleta: dict, titulo: str, controles_extra: list, datos_pasa
     return ft.Container(
         expand=True,
         padding=20,
-        bgcolor=paleta["fondo_inicio"],
+        bgcolor="transparent",
         content=ft.Column(controls=[
             *encabezado,
             *controles_extra,

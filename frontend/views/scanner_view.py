@@ -8,7 +8,7 @@ from frontend.tema.temas import COLOR_PRIMARIO, COLOR_EXITO, COLOR_ERROR, obtene
 from frontend.core.ui import boton_primario, boton_volver, en_progreso, campo_texto
 from frontend.components.alertas import mostrar_notificacion
 from backend.dao_transacciones import dao_transacciones
-from backend.qr_seguridad import validar_codigo_qr
+from backend.qr_seguridad import validar_codigo_qr, generar_codigo_qr
 
 
 def _leer_qr_desde_archivo(ruta: str) -> str | None:
@@ -77,12 +77,12 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
     boton_manual = boton_primario("Pagar con codigo", degradado=False)
     boton_manual.content = texto_boton_manual
 
-    async def pagar_con_placa(placa: str):
+    async def pagar_con_placa(placa: str, ruta_id: int, estacion_id: int):
         texto_estado.value = f"Procesando pago ({tipo_pasajero})..."
         texto_estado.color = paleta["texto_principal"]
         pagina.update()
 
-        resultado = dao_transacciones.procesar_pago(billetera_id, placa, tipo_pasajero, medio_verificado)
+        resultado = dao_transacciones.procesar_pago(billetera_id, placa, tipo_pasajero, medio_verificado, ruta_id, estacion_id)
         boton_capturar.content = texto_boton
         boton_capturar.disabled = False
         boton_manual.content = texto_boton_manual
@@ -97,7 +97,7 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
             if resultado.get("aviso_tarifa"):
                 mostrar_notificacion(pagina, resultado["aviso_tarifa"], tipo="advertencia")
             elif resultado.get("saldo_bajo"):
-                mostrar_notificacion(pagina, "Tu saldo quedo bajo. Considera recargar.", tipo="advertencia")
+                mostrar_notificacion(pagina, "Tu saldo quedó bajo. Considera recargar.", tipo="advertencia")
         else:
             texto_estado.value = resultado.get("mensaje", "Error al procesar el pago.")
             texto_estado.color = COLOR_ERROR
@@ -114,8 +114,8 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
             boton_manual.content = texto_boton_manual
             pagina.update()
             return
-        pagina.run_task(pagar_con_placa, validacion["placa"])
-
+        pagina.run_task(pagar_con_placa, validacion["placa"], validacion["ruta_id"], validacion["estacion_id"])
+        
     async def capturar_y_escanear(e):
         texto_estado.value = "Capturando foto..."
         texto_estado.color = paleta["texto_principal"]
@@ -179,8 +179,14 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
     async def pagar_manual(e):
         contenido = (campo_qr_manual.value or "").strip()
         if not contenido:
-            mostrar_notificacion(pagina, "Ingresa el codigo QR del bus", tipo="error")
+            mostrar_notificacion(pagina, "Ingresa el código QR del bus", tipo="error")
             return
+            
+        # UX Fix: Si el usuario escribe solo la placa (ej. "A1T-001"), autogeneramos el código completo 
+        # asumiendo Ruta 1 y Estación 1 por defecto, para que no tenga que adivinar el checksum a mano.
+        if len(contenido) in (7, 8) and "|" not in contenido:
+            contenido = generar_codigo_qr(contenido, 1, 1)
+
         en_progreso(boton_manual)
         pagina.update()
         procesar_contenido_qr(contenido)
@@ -216,7 +222,7 @@ def vista_scanner(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
 
     return ft.Container(
         expand=True,
-        bgcolor=paleta["fondo_inicio"],
+        bgcolor="transparent",
         content=ft.Column(
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER,

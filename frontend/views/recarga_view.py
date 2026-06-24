@@ -68,4 +68,4 @@ def vista_recarga(pagina: ft.Page, modo_oscuro: bool, datos_pasajero: dict, al_v
         ]),
     )
 
-    return ft.Container(expand=True, alignment=ft.Alignment.CENTER, padding=20, bgcolor=paleta["fondo_inicio"], content=tarjeta)
+    return ft.Container(expand=True, alignment=ft.Alignment.CENTER, padding=20, bgcolor="transparent", content=tarjeta)

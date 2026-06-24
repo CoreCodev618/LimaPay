@@ -88,14 +88,22 @@ def vista_register(pagina: ft.Page, modo_oscuro: bool, al_registro_exitoso=None,
     tarjeta = tarjeta_contenedor(paleta, [
         ft.Text("Nueva Cuenta", size=28, weight=ft.FontWeight.BOLD, color=paleta["texto_principal"]),
         ft.Text("Únete a LimaPay", size=13, color=paleta["texto_secundario"]),
-        campo_nombre, campo_dni, campo_email, campo_clave,
-        ft.Text("Tipo de pasajero", size=13, color=paleta["texto_secundario"]),
-        grupo_tipo, aviso_medio_pasaje,
-        dropdown_pregunta, campo_respuesta,
-        boton_registro,
-        ft.Container(content=boton_secundario("¿Ya tienes cuenta? Inicia sesión", paleta,
-                                                lambda e: al_volver_login() if al_volver_login else None),
-                     alignment=ft.Alignment.CENTER),
+        ft.Container(
+            content=ft.Column(
+                [
+                    campo_nombre, campo_dni, campo_email, campo_clave,
+                    ft.Text("Tipo de pasajero", size=13, color=paleta["texto_secundario"]),
+                    grupo_tipo, aviso_medio_pasaje,
+                    dropdown_pregunta, campo_respuesta,
+                    boton_registro,
+                    ft.Container(content=boton_secundario("¿Ya tienes cuenta? Inicia sesión", paleta,
+                                                            lambda e: al_volver_login() if al_volver_login else None),
+                                 alignment=ft.Alignment.CENTER),
+                ],
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            height=500,
+        )
     ])
 
     aplicar_resize(pagina, tarjeta)
