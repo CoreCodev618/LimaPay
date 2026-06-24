@@ -1,37 +1,47 @@
 import qrcode
 import os
+from backend.config_db import db
 from backend.qr_seguridad import generar_codigo_qr
 
-# Crea una carpeta para mantener limpio tu proyecto
-carpeta_salida = "qrs_buses"
+carpeta_salida = "qrs_todos_buses"
 os.makedirs(carpeta_salida, exist_ok=True)
 
-# Todas las placas extraídas de tu base de datos (schema.sql)
-buses_por_operador = {
-    "Metropolitano": ['A1T-001', 'A1T-045', 'A1T-089', 'A1T-112', 'A1T-156'],
-    "Corredor_Rojo": ['B2R-201', 'B2R-202', 'B2R-203', 'B2R-204'],
-    "Corredor_Azul": ['C3A-301', 'C3A-302', 'C3A-303'],
-    "Los_Chinos": ['D4L-401', 'D4L-402', 'D4L-403', 'D4L-404'],
-    "Consorcio_Roma": ['E5R-501', 'E5R-502'],
-    "La_50": ['F6L-601', 'F6L-602']
-}
-
-total = 0
-print("Generando lote de códigos QR de LimaPay...\n")
-
-for operador, placas in buses_por_operador.items():
-    print(f"--- {operador} ---")
-    for placa in placas:
-        # Genera el string seguro: PLACA|CHECKSUM
-        texto_qr = generar_codigo_qr(placa)
+def generar_todo():
+    sql = """
+        SELECT b.placa, r.id AS ruta_id, r.codigo_ruta, ep.id AS estacion_id, ep.nombre AS estacion
+        FROM Buses b
+        JOIN Operadores o ON b.operador_id = o.id
+        JOIN Rutas r ON r.operador_id = o.id
+        CROSS JOIN Estaciones_Paraderos ep;
+    """
+    
+    print("Conectando a la base de datos para extraer rutas y buses...")
+    try:
+        with db.obtener_cursor() as cur:
+            cur.execute(sql)
+            resultados = cur.fetchall()
+            
+            print(f"Se encontraron {len(resultados)} combinaciones para generar.\n")
+            
+            for fila in resultados:
+                placa = fila["placa"]
+                ruta_id = fila["ruta_id"]
+                estacion_id = fila["estacion_id"]
+                
+                # Generar el contenido del QR
+                texto_qr = generar_codigo_qr(placa, ruta_id, estacion_id)
+                
+                # Crear la imagen
+                imagen = qrcode.make(texto_qr)
+                nombre_archivo = f"{carpeta_salida}/{placa}_R{ruta_id}_E{estacion_id}.png"
+                imagen.save(nombre_archivo)
+                
+                print(f" ✓ Generado: {nombre_archivo}")
+                
+        print(f"\n¡Proceso completado! Todos los QRs están en '{carpeta_salida}'.")
         
-        # Crea y guarda la imagen
-        imagen = qrcode.make(texto_qr)
-        nombre_archivo = f"{carpeta_salida}/{operador}_{placa}.png"
-        imagen.save(nombre_archivo)
-        
-        print(f" ✓ {placa} -> {texto_qr}")
-        total += 1
-    print("")
+    except Exception as e:
+        print(f"Error al conectar con la BD: {e}")
 
-print(f"¡Listo! Se generaron {total} códigos QR en la carpeta '{carpeta_salida}'.")
+if __name__ == "__main__":
+    generar_todo()

@@ -34,7 +34,7 @@ class DAOTransacciones:
             return {"saldo": -1.0, "saldo_bajo": False}
 
     def procesar_pago(self, billetera_id: int, placa_bus: str, tipo_pasajero: str = "General",
-                       medio_verificado: bool = True) -> dict:
+                       medio_verificado: bool = True, ruta_id: int = 1, estacion_id: int = 1) -> dict:
         # Un pasajero "Medio" sin verificación aprobada paga tarifa General (anti-fraude).
         tipo_efectivo = tipo_pasajero if (tipo_pasajero == "General" or medio_verificado) else "General"
 
@@ -71,9 +71,7 @@ class DAOTransacciones:
                 cur.execute(sql_desc, (monto_tarifa, billetera_id))
                 nuevo_saldo = float(cur.fetchone()["saldo_actual"])
 
-                cur.execute("SELECT id FROM Rutas WHERE operador_id = %s LIMIT 1;", (operador_id,))
-                fila_ruta = cur.fetchone()
-                cur.execute(sql_viaje, (billetera_id, bus_id, fila_ruta["id"] if fila_ruta else 1, tarifa_id, 1))
+                cur.execute(sql_viaje, (billetera_id, bus_id, ruta_id, tarifa_id, estacion_id))
 
                 logger.info(f"Viaje autorizado placa={placa_bus} tipo={tipo_efectivo} nuevo_saldo={nuevo_saldo}")
                 aviso_tarifa = None
