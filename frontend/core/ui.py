@@ -49,7 +49,6 @@ def boton_volver(paleta: dict, datos_pasajero: dict, al_volver_home=None) -> ft.
 
 
 def en_progreso(boton: ft.Container) -> None:
-    """Reemplaza el contenido de un botón por un spinner (estado de carga)."""
     boton.content = ft.ProgressRing(width=18, height=18, color="#0A0E1A", stroke_width=2)
 
 
@@ -66,7 +65,6 @@ def tarjeta_contenedor(paleta: dict, controles: list, ancho: int = 380, espaciad
 
 def fondo_pantalla(paleta: dict, contenido, vertical: bool = True, expandir_contenido: bool = False,
                     alineacion=ft.Alignment.CENTER) -> ft.Container:
-    """Container raíz con degradado de fondo, usado por todas las vistas."""
     inicio = ft.Alignment.TOP_CENTER if vertical else ft.Alignment.TOP_LEFT
     fin = ft.Alignment.BOTTOM_CENTER if vertical else ft.Alignment.BOTTOM_RIGHT
     return ft.Container(
@@ -80,7 +78,6 @@ def fondo_pantalla(paleta: dict, contenido, vertical: bool = True, expandir_cont
 
 def pantalla_simple(paleta: dict, titulo: str, controles_extra: list, datos_pasajero: dict, al_volver_home=None,
                      subtitulo: str = None) -> ft.Container:
-    """Layout compartido por historial/dashboard/recarga-style: título + contenido + botón volver."""
     encabezado = [ft.Text(titulo, size=24, weight=ft.FontWeight.BOLD, color=paleta["texto_principal"])]
     if subtitulo:
         encabezado.append(ft.Text(subtitulo, size=14, color=paleta["texto_secundario"]))
@@ -97,7 +94,6 @@ def pantalla_simple(paleta: dict, titulo: str, controles_extra: list, datos_pasa
 
 
 def aplicar_resize(pagina: ft.Page, control, maximo: int = 380, margen: int = 48, minimo: int = 280, attr: str = "width"):
-    """Suscribe el resize de la página para ajustar el ancho de `control` dinámicamente."""
     def manejador(e):
         setattr(control, attr, ancho_responsive(pagina.width, maximo, margen, minimo))
         pagina.update()

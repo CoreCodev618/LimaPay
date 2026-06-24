@@ -91,13 +91,13 @@ def main(pagina: ft.Page):
                 end=ft.Alignment.BOTTOM_RIGHT,
                 colors=[
                     paleta["fondo_inicio"],
-                    "#1A2942" if estado["oscuro"] else "#E2E8F4", # Tono intermedio para dar profundidad
+                    "#1A2942" if estado["oscuro"] else "#E2E8F4",
                     paleta["fondo_fin"]
                 ],
             )
         )
         pagina.bgcolor = "transparent"
-        pagina.appbar.bgcolor = "transparent" # Se funde con el fondo
+        pagina.appbar.bgcolor = "transparent" 
         
         titulo_barra.color = paleta["texto_principal"]
         boton_tema.icon = ft.Icons.LIGHT_MODE_OUTLINED if estado["oscuro"] else ft.Icons.DARK_MODE_OUTLINED
@@ -106,7 +106,7 @@ def main(pagina: ft.Page):
         rutas_con_barra = ["home", "dashboard", "scanner", "historial", "perfil"]
         if estado["ruta"] in rutas_con_barra:
             barra_navegacion.bgcolor = paleta["tarjeta"]
-            barra_navegacion.indicator_color = "#22E0A640" # Verde primario con transparencia
+            barra_navegacion.indicator_color = "#22E0A640"
             barra_navegacion.selected_index = rutas_con_barra.index(estado["ruta"])
             pagina.navigation_bar = barra_navegacion
         else:
